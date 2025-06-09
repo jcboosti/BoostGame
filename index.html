@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TikTok Gift Button Overlay</title>
+  <!--
+    HOW TO USE
+    1. Host this file somewhere your TikTok Live Studio browser‑source can reach (GitHub Pages, Netlify, local HTTP server, etc.).
+    2. Add a **Browser Source** overlay in TikTok Live Studio and point the URL to the hosted file.
+    3. Check the "Transparent background" option and size the overlay anywhere on screen (e.g. 1920×1080, or just give it a custom width/height that fits your button).
+    4. Replace `webhookUrl` below with your real endpoint (serverless function, Discord webhook, etc.).
+    5. Make sure CORS is enabled on the endpoint if it’s on a different domain.
+    6. Press the button in the overlay while live – it will fire a POST payload and show a quick toast confirming the click.
+  -->
+  <style>
+    html,body { margin:0; padding:0; background:transparent; overflow:hidden; }
+
+    /* Gift button */
+    #gift-btn {
+      position:fixed;
+      bottom:40px;
+      right:40px;
+      width:100px;
+      height:100px;
+      border-radius:50%;
+      border:none;
+      background:#ff0050;           /* TikTok pink */
+      color:#fff;
+      font-size:1.8rem;
+      cursor:pointer;
+      box-shadow:0 0 12px rgba(0,0,0,.4);
+      transition:transform .2s;
+    }
+    #gift-btn:hover { transform:scale(1.1); }
+
+    /* "Gift sent!" toast */
+    #toast {
+      position:fixed;
+      bottom:160px;
+      right:40px;
+      padding:12px 20px;
+      background:#fff;
+      color:#333;
+      border-radius:8px;
+      font-family:sans-serif;
+      font-size:1rem;
+      opacity:0;
+      pointer-events:none;
+    }
+
+    @keyframes fadeInOut {
+      0%   {opacity:0; transform:translateY(10px);}  
+      10%  {opacity:1; transform:translateY(0);}     
+      80%  {opacity:1; transform:translateY(0);}     
+      100% {opacity:0; transform:translateY(-10px);} 
+    }
+  </style>
+</head>
+<body>
+  <button id="gift-btn" title="Send virtual gift">🎁</button>
+  <div id="toast">Gift sent!</div>
+
+  <script>
+    // 1️⃣ Point this to your own webhook / serverless function
+    const webhookUrl = "https://d.codemonkey.games";    // <-- replace
+
+    const giftBtn = document.getElementById('gift-btn');
+    const toast   = document.getElementById('toast');
+
+    function showToast() {
+      toast.style.animation = 'none';           // reset
+      void toast.offsetWidth;                  // force reflow
+      toast.style.animation = 'fadeInOut 2s';  // play
+    }
+
+    giftBtn.addEventListener('click', () => {
+      // Fire the webhook (POST JSON)
+      fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'gift_click',
+          streamer: '@YourHandle',              // optional metadata
+          timestamp: Date.now()
+        })
+      }).catch(err => console.error('Webhook error:', err));
+
+      // Tiny visual confirmation
+      showToast();
+    });
+  </script>
+</body>
+</html>
